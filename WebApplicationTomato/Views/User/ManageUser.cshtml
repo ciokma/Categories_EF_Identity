@@ -1,0 +1,204 @@
+﻿@{
+    var data = (List<WebApplicationTomato.ViewModel.UserDTO>)Model;
+}
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Manage User";
+}
+
+<h1>Category</h1>
+@if (ViewBag.SucessMessage is not null)
+{
+    <div class="alert alert-primary" role="alert">
+        @ViewData["SucessMessage"]
+    </div>
+
+}
+@if (ViewBag.ErrorMessage is not null)
+{
+    <div class="alert alert-primary" role="alert">
+        @ViewData["ErrorMessage"]
+    </div>
+
+}
+<table class="table highlight">
+    <thead>
+        <tr>
+            <th scope="col">Accion</th>
+            <th scope="col">Name</th>
+        </tr>
+    </thead>
+    <tbody id="categories-table">
+        @foreach (var item in data)
+        {
+            <tr id="@item.Id">
+                <td>
+                    <button type="button" class="btn btn-primary" onclick='showModal("@item.Id")'>
+                        Manage
+                    </button>
+
+                </td>
+                <td>@item.Name</td>
+
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">User</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="inputAddress">Id</label>
+                    <input type="text" id="Id" class="form-control" name="Id" />
+                </div>
+                <div class="form-group">
+                    <label for="inputAddress">User Name</label>
+                    <input type="text" id="UserName" class="form-control" name="UserName" />
+                </div>
+
+                <div class="form-row">
+
+                    <div class="form-group col-md-12">
+                        <label for="inputState">Role</label>
+                        @Html.DropDownList("RoleId", new SelectList(ViewBag.RoleList, "Value", "Text"), new { @class = "form-control", @placeholder = "Roles" })
+                    </div>
+
+                </div>
+
+                <table class="table" id="gridTable">
+                    <thead class="thead-light">
+                        <tr>
+                            <th scope="col">Role Name</th>
+                            <th scope="col">Action</th>
+
+                        </tr>
+                    </thead>
+                    <tbody id="bodyTable"></tbody>
+                </table>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-warning" onclick="alert('No implemenented yet');">Delete</button>
+
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" id="btnClose">Close</button>
+                <button type="button" class="btn btn-primary" id="saveChanges" onclick="addRoles()">Add Role</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*The script can be in other files but for demo purpose is here in the same view*@
+<script>
+    
+    function showModal(id) {
+        alertify.success("The item has been loaded");
+
+        debugger;
+        $.ajax({
+            url: '/User/GetUser/' + id,
+            type: 'POST',
+            success: function (result) {
+                console.log(result);
+                console.log(result);
+                $("#Id").val(id);
+                $("#UserName").val(result.name);
+                $("#RoleId").val(result.roleId);
+
+                $('#myModal').modal()
+            }
+        });
+
+
+
+    }
+
+    function addRoles() {
+        const user = {
+            Name: $("#RoleId option:selected").text()
+            ,UserId: document.getElementById("Id").value
+            , Id: document.getElementById("RoleId").value
+        };
+
+        $.ajax({
+            data: user,
+            type: 'POST',
+            url: '/User/AddRole',
+        }).done(function (response) {
+            alertify.success("The role has been added successfully!!");
+            console.log(response);
+            generateTable(response);
+        }).fail(function (jqXHR, textStatus, errorThrown) {
+            alertify.error(jqXHR.responseText || textStatus);
+        });
+
+
+
+    }
+    function generateListTable(data) {
+
+        //$("#gridTable tbody").empty();
+        var tableelement = $("#gridTable tbody");
+
+        for (var i = 0; i < data.length; i++) {
+            tableelement.append(createRow(data[i]));
+        }
+
+    }
+    function generateTable(data) {
+
+        //$("#gridTable tbody").empty();
+        var tableelement = $("#gridTable tbody");
+
+        tableelement.append(createRow(data));
+        
+
+    }
+    function createRow(object) {
+
+        var trElement = "<tr id='" + object.id + "'>";
+        trElement += "<td>" + object.name + "</td>";
+
+        trElement += "<td>";
+        trElement += "<button class='btn btn-danger'" + "onclick = deleteRoleFromUser('" + object.id + "')" + ">Delete Role</button>";
+        trElement += "</td>";
+
+        return trElement;
+    }
+    function deleteRoleFromUser(id) {
+        const user = {
+             UserId: document.getElementById("Id").value
+            , Id: id
+        };
+
+        $.ajax({
+            data: user,
+            type: 'POST',
+            url: '/User/DeleteRoleFromUser',
+        }).done(function (response) {
+            if (response.status) {
+                alertify.success("It has been deleted successfully!!");
+                $("#" + id).remove();
+                document.getElementById("btnClose").click();
+            }
+            else {
+                alertify.error("The item has assigned child element, please delete firt the childen elements");
+            }
+
+        }).fail(function (jqXHR, textStatus, errorThrown) {
+            alertify.error(jqXHR.responseText || textStatus);
+        });
+
+
+    }
+    
+</script>

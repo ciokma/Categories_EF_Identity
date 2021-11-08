@@ -1,0 +1,84 @@
+﻿@model WebApplicationTomato.ViewModel.CategoryDTO
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Category</h1>
+@if (ViewBag.SucessMessage is not null)
+{
+    <div class="alert alert-primary" role="alert">
+        @ViewData["SucessMessage"]
+    </div>
+
+}
+@if (ViewBag.ErrorMessage is not null)
+{
+    <div class="alert alert-primary" role="alert">
+        @ViewData["ErrorMessage"]
+    </div>
+
+}
+
+@using (Html.BeginForm("Create", "Category", FormMethod.Post,
+                             new { enctype = "multipart/form-data" }))
+{
+    @Html.ValidationSummary(true)
+
+    <div class="form-group">
+        <label for="inputAddress">Description</label>
+        @Html.TextBoxFor(modelCategory => modelCategory.Description, new { @class = "form-control", @placeholder = "Category Name" })
+    </div>
+
+    <div class="form-row">
+        <div class="form-group col-md-12">
+            <div class="form-check">
+                @Html.CheckBoxFor(modelCategory => modelCategory.IsVisibleForPublic, new { @class = "form-check-input" })
+
+                <label class="form-check-label" for="gridCheck">
+                    Category is visible for public?
+                </label>
+            </div>
+        </div>
+
+
+    </div>
+
+    <div class="form-row">
+
+        <div class="form-group col-md-12">
+            <label for="inputState">Role</label>
+            @Html.DropDownListFor(m => m.RoleId, new SelectList(ViewBag.RolesList, "Value", "Text"), new { @class = "form-control", @placeholder = "Role Name" })
+
+        </div>
+
+    </div>
+
+    <div class="form-row">
+
+        <div class="form-group col-md-12">
+            <label for="inputState">Root Category / Parent</label>
+            @Html.DropDownListFor(m => m.RootCategoryId, new SelectList(ViewBag.CategoryList, "Value", "Text"), new { @class = "form-control", @placeholder = "Role Name" })
+
+        </div>
+
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a class="btn btn-info" asp-area="" asp-controller="Category" asp-action="ManageCategory">Manage Category</a>
+
+}
+
+@*The script can be in other files but for demo purpose is here in the same view*@
+<script>
+    const checkbox = document.getElementById("IsVisibleForPublic");
+    checkbox.addEventListener('change', (event) => {
+        if (event.currentTarget.checked) {
+            document.getElementById("RoleId").value = "00000000-0000-0000-0000-000000000000";
+            document.getElementById("RoleId").setAttribute("disabled", "disabled");
+
+        } else {
+            document.getElementById("RoleId").removeAttribute("disabled");
+        }
+    })
+</script>

@@ -1,0 +1,27 @@
+﻿@model List<WebApplicationTomato.Data.Category>
+@using WebApplicationTomato.Helper
+
+
+    @if (Model != null)
+    {
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Categories</a>
+            <ul class="dropdown-menu">
+                @foreach (WebApplicationTomato.Data.Category item in @Model)
+                {
+                <li>
+                    <a class="dropdown-item" href="#"> @item.Description </a>
+                    @{
+                        string htmlData = CustomHelper.ShowCategory(item);
+                        @Html.Raw(htmlData);
+                    }
+
+                </li>
+
+                }
+            </ul>
+        </li>
+
+    }
+
+

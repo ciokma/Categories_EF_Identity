@@ -1,0 +1,236 @@
+﻿
+
+@{
+    var data = (List<WebApplicationTomato.ViewModel.CategoryDTO>)Model;
+}
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Show";
+}
+
+<h1>Category</h1>
+@if (ViewBag.SucessMessage is not null)
+{
+    <div class="alert alert-primary" role="alert">
+        @ViewData["SucessMessage"]
+    </div>
+
+}
+@if (ViewBag.ErrorMessage is not null)
+{
+    <div class="alert alert-primary" role="alert">
+        @ViewData["ErrorMessage"]
+    </div>
+
+}
+<a class="btn btn-info" asp-area="" asp-controller="Category" asp-action="Index">Add Category</a>
+
+<table class="table highlight">
+    <thead>
+        <tr>
+
+            <th scope="col">Action</th>
+            <th scope="col">Description</th>
+            <th scope="col">Created</th>
+            <th scope="col">Disable Date</th>
+
+            <th scope="col">Active?</th>
+            <th scope="col">Is Visible For Public</th>
+        </tr>
+    </thead>
+    <tbody id="categories-table">
+        @foreach (var item in data)
+        {
+            <tr id="@item.Id">
+                <td>
+                    <button type="button" class="btn btn-primary" onclick='showModal("@item.Id")'>
+                        Manage
+                    </button>
+
+                </td>
+                <td>@item.Description</td>
+                <td>@item.CreateDate.ToString("MMM dd, yyyy", DateTimeFormatInfo.InvariantInfo)</td>
+                <td>
+                    @{
+                        if (item.DisableDate != null)
+                        {
+                            DateTime date = new DateTime();
+                            DateTime.TryParse(item.DisableDate.ToString(), out date);
+                            date.ToString("MMM dd, yyyy", DateTimeFormatInfo.InvariantInfo);
+                        }
+                        else
+                        {
+                            Html.Raw("----------");
+                        }
+                }
+            </td>
+
+            <td>@(item.IsActive? "Active" : "Disabled")</td>
+            <td>@(item.IsVisibleForPublic? "Äctive" : "Disabled")</td>
+
+        </tr>
+    }
+    </tbody>
+</table>
+
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Category</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="inputAddress">Id</label>
+                    <input type="text" id="Id" class="form-control" name="Id" />
+                </div>
+                <div class="form-group">
+                    <label for="inputAddress">Description</label>
+                    <input type="text" id="Description" class="form-control" name="Description" />
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="IsVisibleForPublic" name="IsVisibleForPublic" />
+                            <label class="form-check-label" for="gridCheck">
+                                Category is visible for public?
+                            </label>
+                        </div>
+                    </div>
+
+
+                </div>
+
+                <div class="form-row">
+
+                    <div class="form-group col-md-12">
+                        <label for="inputState">Role</label>
+                        @Html.DropDownList("RoleId", new SelectList(ViewBag.RolesList, "Value", "Text"), new { @class = "form-control", @placeholder = "Role Name" })
+
+                    </div>
+
+                </div>
+
+                <div class="form-row">
+
+                    <div class="form-group col-md-12">
+                        <label for="inputState">Root Category / Parent</label>
+                        @Html.DropDownList("RootCategoryId", new SelectList(ViewBag.CategoryList, "Value", "Text"), new { @class = "form-control", @placeholder = "Parent" })
+                    </div>
+
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="IsActive" name="IsActive" />
+                            <label class="form-check-label" for="gridCheck">
+                                Is Active?
+                            </label>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-warning" onclick="deleteItem()">Delete</button>
+
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" id="btnClose">Close</button>
+                <button type="button" class="btn btn-primary" id="saveChanges" onclick="saveChanges()">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*The script can be in other files but for demo purpose is here in the same view*@
+<script>
+    function deleteItem() {
+        var id = document.getElementById("Id").value
+        $.ajax({
+            type: 'POST',
+            url: '/Category/DeleteCategory/' + id,
+        }).done(function (response) {
+            if (response.status) {
+                alertify.success("It has been deleted successfully!!");
+                $("#" + id).remove();
+                document.getElementById("btnClose").click();
+            }
+            else {
+                alertify.error("The item has assigned child element, please delete firt the childen elements");
+            }
+
+        }).fail(function (jqXHR, textStatus, errorThrown) {
+            alertify.error(jqXHR.responseText || textStatus);
+        });
+
+
+    }
+    function showModal(id) {
+        alertify.success("The item has been loaded, you can modify it and then save changes");
+
+        debugger;
+        $.ajax({
+            url: '/Category/GetCategory/' + id,
+            type: 'POST',
+            success: function (result) {
+                console.log(result);
+                $("#Id").val(id);
+                $("#Description").val(result.description);
+                $("#IsVisibleForPublic").prop('checked', result.isVisibleForPublic);
+                $("#RoleId").val(result.roleId);
+                $("#RootCategoryId").val(result.rootCategory ?? "");
+                $("#IsActive").prop('checked', result.isActive);
+
+                $('#myModal').modal()
+            }
+        });
+
+    }
+
+    function saveChanges() {
+        const category = {
+            Id: document.getElementById("Id").value
+            , Description: document.getElementById("Description").value
+            , IsVisibleForPublic: document.getElementById("IsVisibleForPublic").checked
+            , RoleId: document.getElementById("RoleId").value
+            , RootCategoryId: document.getElementById("RootCategoryId").value
+            , IsActive: document.getElementById("IsActive").checked
+        };
+
+        $.ajax({
+            data: category,
+            type: 'POST',
+            url: '/Category/SaveChangesCategory',
+        }).done(function (response) {
+            if (response.status) {
+                alertify.success("It has been updated successfully!!");
+
+            }
+            else {
+                alertify.error("There was a problem trying to update the item. Please contact the admin.");
+            }
+
+        }).fail(function (jqXHR, textStatus, errorThrown) {
+            alertify.error(jqXHR.responseText || textStatus);
+        });
+
+
+
+    }
+    const checkbox = document.getElementById("IsVisibleForPublic");
+    checkbox.addEventListener('change', (event) => {
+        if (event.currentTarget.checked) {
+            document.getElementById("RoleId").value = "00000000-0000-0000-0000-000000000000";
+            document.getElementById("RoleId").setAttribute("disabled", "disabled");
+
+        } else {
+            document.getElementById("RoleId").removeAttribute("disabled");
+        }
+    })
+</script>

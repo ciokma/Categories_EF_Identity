@@ -1,0 +1,14 @@
+﻿@model List<WebApplicationTomato.Data.Category>
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+@using WebApplicationTomato.Helper
+@*@{
+        ShowTree(Model);
+    }*@
+
+@foreach (WebApplicationTomato.Data.Category item in @Model)
+{
+    <ul> @item.Description </ul>
+     @Html.Raw(CustomHelper.ShowCategories(item));
+}
